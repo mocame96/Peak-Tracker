@@ -788,12 +788,14 @@ function setSyncUI(state) {
 }
 
 async function loadData() {
+  loadLocal();   // restaurar estado guardado inmediatamente
+  renderAll();   // mostrar datos locales mientras se conecta
   setSyncUI('saving');
   if (API_URL && API_URL.includes('script.google')) {
     try {
       const ctrl = new AbortController();
       const t = setTimeout(() => ctrl.abort(), 10000);
-      const res = await fetch(API_URL + '?action=all', {signal: ctrl.signal, mode: 'cors'});
+      const res = await fetch(API_URL + '?action=all', {signal: ctrl.signal});
       clearTimeout(t);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const remote = await res.json();
@@ -807,8 +809,6 @@ async function loadData() {
   } else {
     setSyncUI('local');
   }
-  loadLocal();
-  renderAll();
 }
 
 function mergeRemote(r) {
@@ -833,6 +833,8 @@ function mergeRemote(r) {
   if (r.ftpHistory && r.ftpHistory.length) {
     S.ftpHist = [{w:0,v:FTP_S,d:'2026-03-23'},
       ...r.ftpHistory.map(e => ({w:+e.week, v:+e.ftp, d:String(e.date||'').slice(0,10)})).filter(e=>e.v>0)];
+    const latestFtp = [...S.ftpHist].filter(h=>h.w>0).sort((a,b)=>b.w-a.w)[0];
+    if (latestFtp) S.ftp = latestFtp.v;
   }
   if (r.sessions && r.sessions.length) {
     S.checks = {};
