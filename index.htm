@@ -455,8 +455,8 @@ details[open] summary{color:var(--t1)}
         </div>
         <div class="g2" style="margin-bottom:12px">
           <div class="fg">
-            <label class="fl">Peso (kg)</label>
-            <input class="fi" type="number" inputmode="decimal" id="ip-wt" step="0.1" placeholder="79.0" oninput="updateCalcUI()">
+            <label class="fl">Peso (g)</label>
+            <input class="fi" type="number" inputmode="numeric" id="ip-wt" step="1" placeholder="79000" oninput="updateCalcUI()">
           </div>
           <div class="fg">
             <label class="fl">FC reposo (lpm)</label>
@@ -861,7 +861,7 @@ async function apiPost(sheet, data) {
 // SAVE ACTIONS
 // ══════════════════════════════════════════════════
 async function saveDaily() {
-  const wt  = parseFloat(document.getElementById('ip-wt').value)  || 0;
+  const wt  = (parseFloat(document.getElementById('ip-wt').value) || 0) / 1000;
   const hr  = parseInt(document.getElementById('ip-hr').value)    || 0;
   const cal = parseInt(document.getElementById('ip-cal').value)   || 0;
   const tss = parseInt(document.getElementById('ip-tss').value)   || 0;
