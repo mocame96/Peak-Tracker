@@ -907,7 +907,7 @@ async function saveMetrics() {
   if (ftp) { S.ftp = ftp; if (!S.ftpHist.find(h=>h.w===w)) S.ftpHist.push({w,v:ftp,d:ds}); await apiPost('FTPHistory',{week:w,ftp,date:ds}); }
   if (bn)  { S.bench  = bn;  }
   if (pu)  { S.pullup = pu;  }
-  if (bn || pu) await apiPost('Metrics', {ftp:S.ftp, weight:S.weight, bench:S.bench, pullup:S.pullup});
+  if (ftp || bn || pu) await apiPost('Metrics', {ftp:S.ftp, weight:S.weight, bench:S.bench, pullup:S.pullup});
   showMsg(true); chartsBuilt=false; renderAll();
 }
 
