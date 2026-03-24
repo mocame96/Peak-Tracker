@@ -7,7 +7,8 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#f5f4f0" media="(prefers-color-scheme: light)">
 <meta name="theme-color" content="#1e1e1c" media="(prefers-color-scheme: dark)">
-<title>Peak Performance 2026 — Mobile</title>
+<title>Peak Performance 2026</title>
+<link rel="apple-touch-icon" href="palmas_sub_40.png">
 <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
@@ -174,6 +175,13 @@ body{
 @media(max-width:420px){
   .g4,.g3{grid-template-columns:repeat(2,1fr)}
 }
+/* desktop: expand grids and shell */
+@media(min-width:768px){
+  #shell{max-width:1200px}
+  .g4{grid-template-columns:repeat(6,1fr)}
+  .g3{grid-template-columns:repeat(4,1fr)}
+  .g2{grid-template-columns:repeat(3,1fr)}
+}
 
 /* ── BADGE ───────────────────────── */
 .badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600;letter-spacing:.03em}
@@ -327,6 +335,20 @@ details summary{
 }
 details summary::marker{display:none}
 details[open] summary{color:var(--t1)}
+
+/* ── DESKTOP OPTIMIZATIONS ──────────── */
+@media(min-width:900px){
+  #shell{max-width:1300px}
+  /* Aumentar alturas de gráficos */
+  #c-ftp, #c-wt, #c-wkg, #c-tss, #c-pmc, #c-rpe, #c-cal-d, #c-cal-w{
+    min-height:300px !important;
+  }
+  .card{padding:16px}
+  .slbl{margin:20px 0 12px}
+  /* Layouts lado a lado para análisis */
+  .g3{grid-template-columns:repeat(4,1fr)}
+  .g2{grid-template-columns:repeat(3,1fr)}
+}
 
 </style>
 </head>
