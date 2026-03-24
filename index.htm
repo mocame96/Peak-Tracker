@@ -799,6 +799,8 @@ async function loadData() {
       clearTimeout(t);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const remote = await res.json();
+      console.log('[Peak Tracker] Remote keys:', Object.keys(remote||{}));
+      console.log('[Peak Tracker] Remote raw:', JSON.stringify(remote).slice(0, 800));
       if (remote && !remote.error) { mergeRemote(remote); saveLocal(); setSyncUI('ok'); renderAll(); return; }
       else if (remote?.error) throw new Error(`Backend: ${remote.error}`);
       else throw new Error('Invalid response format');
@@ -812,35 +814,51 @@ async function loadData() {
 }
 
 function mergeRemote(r) {
-  if (r.metrics) {
-    if (+r.metrics.ftp)    S.ftp    = +r.metrics.ftp;
-    if (+r.metrics.weight) S.weight = +r.metrics.weight;
-    if (+r.metrics.bench)  S.bench  = +r.metrics.bench;
-    if (+r.metrics.pullup) S.pullup = +r.metrics.pullup;
+  // Tolerar PascalCase (DailyLog) y camelCase (dailyLog)
+  const metrics    = r.metrics    || r.Metrics;
+  const dailyLog   = r.dailyLog   || r.DailyLog;
+  const ftpHistory = r.ftpHistory || r.FTPHistory || r.FtpHistory;
+  const sessions   = r.sessions   || r.Sessions;
+
+  if (metrics) {
+    if (+metrics.ftp)    S.ftp    = +metrics.ftp;
+    if (+metrics.weight) S.weight = +metrics.weight;
+    if (+metrics.bench)  S.bench  = +metrics.bench;
+    if (+metrics.pullup) S.pullup = +metrics.pullup;
   }
-  if (r.dailyLog && r.dailyLog.length) {
-    S.dailyLog = r.dailyLog.map(e => ({
-      d: String(e.date||e.d||'').slice(0,10),
-      weight: +e.weight||0, calories: +e.calories||0,
-      tss: +e.tss||0, rpe: +e.rpe||0, hr: +e.hr||0
-    })).filter(e => e.d.length === 10);
-    S.wtHist = S.dailyLog.filter(e => e.weight>0).map(e => ({d:e.d, v:e.weight}));
-    
-    // Tomar el peso más reciente del dailyLog
+  if (dailyLog && dailyLog.length) {
+    S.dailyLog = dailyLog.map(e => {
+      const rawWt = +(e.weight ?? e.Weight) || 0;
+      return {
+        d:        String(e.date || e.Date || e.d || '').slice(0, 10),
+        weight:   rawWt > 500 ? +(rawWt / 1000).toFixed(2) : rawWt,  // gramos → kg si >500
+        calories: +(e.calories ?? e.Calories) || 0,
+        tss:      +(e.tss      ?? e.TSS)      || 0,
+        rpe:      +(e.rpe      ?? e.RPE)      || 0,
+        hr:       +(e.hr       ?? e.RHR       ?? e.Hr) || 0
+      };
+    }).filter(e => e.d.length === 10);
+    S.wtHist = S.dailyLog.filter(e => e.weight > 0).map(e => ({d: e.d, v: e.weight}));
     const lastWithWeight = [...S.dailyLog].reverse().find(e => e.weight > 0);
     if (lastWithWeight) S.weight = lastWithWeight.weight;
   }
-  if (r.ftpHistory && r.ftpHistory.length) {
-    S.ftpHist = [{w:0,v:FTP_S,d:'2026-03-23'},
-      ...r.ftpHistory.map(e => ({w:+e.week, v:+e.ftp, d:String(e.date||'').slice(0,10)})).filter(e=>e.v>0)];
-    const latestFtp = [...S.ftpHist].filter(h=>h.w>0).sort((a,b)=>b.w-a.w)[0];
+  if (ftpHistory && ftpHistory.length) {
+    S.ftpHist = [{w:0, v:FTP_S, d:'2026-03-23'},
+      ...ftpHistory.map(e => ({
+        w: +(e.week ?? e.Week) || 0,
+        v: +(e.ftp  ?? e.FTP)  || 0,
+        d: String(e.date || e.Date || '').slice(0, 10)
+      })).filter(e => e.v > 0)];
+    const latestFtp = [...S.ftpHist].filter(h => h.w > 0).sort((a, b) => b.w - a.w)[0];
     if (latestFtp) S.ftp = latestFtp.v;
   }
-  if (r.sessions && r.sessions.length) {
+  if (sessions && sessions.length) {
     S.checks = {};
-    r.sessions.forEach(s => {
-      if (!S.checks[s.weekKey]) S.checks[s.weekKey] = {};
-      S.checks[s.weekKey][String(s.sessionIndex)] = s.completed===true||s.completed==='TRUE'||+s.completed===1;
+    sessions.forEach(s => {
+      const key = s.weekKey || s.WeekKey;
+      const idx = String(s.sessionIndex ?? s.SessionIndex);
+      if (!S.checks[key]) S.checks[key] = {};
+      S.checks[key][idx] = s.completed===true || s.completed==='TRUE' || +s.completed===1;
     });
   }
 }
